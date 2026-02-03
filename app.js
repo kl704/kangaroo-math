@@ -69,7 +69,7 @@ function goHome() {
 // Quiz Logic
 function startTraining() {
     currentState.mode = 'training';
-    currentState.currentQuestions = getQuestionSet(10);
+    currentState.currentQuestions = getQuestionSet(24);
     startQuiz();
 }
 
@@ -238,4 +238,11 @@ function playConfetti() {
             setTimeout(() => div.remove(), 2000);
         }, 50);
     }
+}
+
+function playSuccessEffect() {
+    // Simple visual feedback for kids
+    const header = document.querySelector('header');
+    header.style.transform = 'scale(1.05)';
+    setTimeout(() => header.style.transform = 'scale(1)', 200);
 }

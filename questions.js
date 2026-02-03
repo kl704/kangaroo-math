@@ -96,10 +96,10 @@ const QUESTIONS = [
 function generateMoreQuestions() {
     const categories = ["Arithmetic", "Logic", "Geometry", "Patterns"];
     
-    // Add 100 Arithmetic questions
-    for (let i = 0; i < 100; i++) {
-        const a = Math.floor(Math.random() * 10) + 1;
-        const b = Math.floor(Math.random() * 10) + 1;
+    // Add 200 Arithmetic questions
+    for (let i = 0; i < 200; i++) {
+        const a = Math.floor(Math.random() * 20) + 1;
+        const b = Math.floor(Math.random() * 20) + 1;
         const op = Math.random() > 0.5 ? '+' : '-';
         let ans, question;
         
@@ -113,21 +113,28 @@ function generateMoreQuestions() {
             question = `Labubu had ${bigger} cookies 🍪 and ate ${smaller}. How many are left?`;
         }
         
-        const options = [ans, ans + 1, ans - 1, ans + 2].sort(() => Math.random() - 0.5);
+        const options = [ans, ans + 1, ans - 1, ans + 2].filter(n => n >= 0).sort(() => Math.random() - 0.5);
+        const uniqueOptions = [...new Set(options)];
+        while(uniqueOptions.length < 4) {
+            let extra = Math.floor(Math.random() * 40);
+            if(!uniqueOptions.includes(extra)) uniqueOptions.push(extra);
+        }
+        uniqueOptions.sort(() => Math.random() - 0.5);
+
         QUESTIONS.push({
             id: QUESTIONS.length + 1,
             level: 1,
             category: "Arithmetic",
             question: question,
-            options: options.map(String),
-            answer: options.indexOf(ans),
+            options: uniqueOptions.map(String),
+            answer: uniqueOptions.indexOf(ans),
             points: 3
         });
     }
 
-    // Add 50 Pattern questions
-    const shapes = ["🔴", "🔵", "🟡", "🟢", "⭐", "💎", "🍄"];
-    for (let i = 0; i < 50; i++) {
+    // Add 100 Pattern questions
+    const shapes = ["🔴", "🔵", "🟡", "🟢", "⭐", "💎", "🍄", "🍎", "🍐", "🍊", "🍋"];
+    for (let i = 0; i < 100; i++) {
         const s1 = shapes[Math.floor(Math.random() * shapes.length)];
         let s2 = shapes[Math.floor(Math.random() * shapes.length)];
         while (s1 === s2) s2 = shapes[Math.floor(Math.random() * shapes.length)];
@@ -140,6 +147,21 @@ function generateMoreQuestions() {
             options: [s2, s1, "🌈", "🔥"],
             answer: 0,
             points: 3
+        });
+    }
+
+    // Add 100 Logic/Counting questions
+    for (let i = 0; i < 100; i++) {
+        const count = Math.floor(Math.random() * 5) + 2;
+        const legs = count * 2;
+        QUESTIONS.push({
+            id: QUESTIONS.length + 1,
+            level: 1,
+            category: "Logic",
+            question: `How many ears do ${count} Labubus have? (Each has 2 ears 🐰)`,
+            options: [String(legs), String(legs + 2), String(legs - 2), String(count)],
+            answer: 0,
+            points: 4
         });
     }
 }
