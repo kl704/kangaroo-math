@@ -1,0 +1,44 @@
+body {
+    -webkit-tap-highlight-color: transparent;
+}
+
+@keyframes bounce-subtle {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+}
+
+.labubu-bounce {
+    animation: bounce-subtle 2s ease-in-out infinite;
+}
+
+.option-btn {
+    @apply bg-white border-2 border-gray-200 rounded-2xl p-6 text-2xl font-bold text-gray-700 shadow-md transition-all active:scale-95 active:bg-gray-50;
+}
+
+.option-btn.correct {
+    @apply border-[#4FB0AC] bg-teal-50 text-[#4FB0AC];
+}
+
+.option-btn.wrong {
+    @apply border-red-300 bg-red-50 text-red-500;
+}
+
+/* Custom scrollbar for stats */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #F8C8DC;
+    border-radius: 10px;
+}
+
+.question-img {
+    max-height: 200px;
+    object-fit: contain;
+}

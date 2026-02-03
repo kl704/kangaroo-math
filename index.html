@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Labubu Math Adventure</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-[#FDF2F5] font-['Quicksand'] select-none">
+    <div id="app" class="max-w-4xl mx-auto h-screen flex flex-col p-4">
+        <!-- Header -->
+        <header class="flex justify-between items-center mb-6">
+            <div class="flex items-center space-x-2">
+                <div class="w-12 h-12 bg-[#F8C8DC] rounded-full flex items-center justify-center shadow-lg border-2 border-[#8B5E3C]">
+                    <span class="text-2xl">🐰</span>
+                </div>
+                <h1 class="text-2xl font-['Fredoka_One'] text-[#8B5E3C]">Labubu Math</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div class="bg-white px-4 py-2 rounded-full shadow-md border-2 border-[#4FB0AC] text-[#4FB0AC] font-bold">
+                    Level: Grade 1/2
+                </div>
+                <button id="stats-btn" onclick="toggleStats()" class="p-2 bg-white rounded-full shadow-md border-2 border-[#F8C8DC] hover:scale-110 transition-transform">
+                    📊
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main id="main-container" class="flex-1 bg-white rounded-3xl shadow-xl border-4 border-[#F8C8DC] p-6 relative overflow-hidden">
+            <!-- Views will be injected here -->
+            <div id="home-view" class="h-full flex flex-col items-center justify-center space-y-8">
+                <div class="text-center">
+                    <h2 class="text-4xl font-['Fredoka_One'] text-[#8B5E3C] mb-2">Ready for Adventure?</h2>
+                    <p class="text-[#4FB0AC] font-semibold text-lg">Help Labubu solve math puzzles!</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-md">
+                    <button onclick="startTraining()" class="flex flex-col items-center justify-center p-8 bg-[#F8C8DC] rounded-3xl shadow-lg border-b-8 border-[#e0a8bc] hover:brightness-105 active:border-b-0 active:translate-y-2 transition-all">
+                        <span class="text-5xl mb-4">🏃‍♀️</span>
+                        <span class="text-2xl font-['Fredoka_One'] text-white">Daily Training</span>
+                        <span class="text-sm text-pink-700 font-bold mt-2">10 Questions • Quick</span>
+                    </button>
+                    <button onclick="startMockTest()" class="flex flex-col items-center justify-center p-8 bg-[#4FB0AC] rounded-3xl shadow-lg border-b-8 border-[#3d8c89] hover:brightness-105 active:border-b-0 active:translate-y-2 transition-all">
+                        <span class="text-5xl mb-4">🏆</span>
+                        <span class="text-2xl font-['Fredoka_One'] text-white">Mock Test</span>
+                        <span class="text-sm text-teal-800 font-bold mt-2">24 Questions • 45m</span>
+                    </button>
+                </div>
+
+                <!-- Daily Progress -->
+                <div class="w-full max-w-md bg-pink-50 rounded-2xl p-6 border-2 border-[#F8C8DC]">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-[#8B5E3C]">Today's Progress</h3>
+                        <span id="daily-count" class="text-[#4FB0AC] font-bold">0 / 5 Sets</span>
+                    </div>
+                    <div class="w-full bg-gray-200 h-4 rounded-full overflow-hidden">
+                        <div id="progress-bar" class="bg-[#F8C8DC] h-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quiz View (Hidden initially) -->
+            <div id="quiz-view" class="hidden h-full flex flex-col">
+                <div class="flex justify-between items-center mb-4">
+                    <div class="text-xl font-bold text-[#8B5E3C]">Question <span id="current-q">1</span>/<span id="total-q">5</span></div>
+                    <div id="timer" class="text-xl font-bold text-[#4FB0AC] font-mono">00:00</div>
+                </div>
+                
+                <div id="question-content" class="flex-1 flex flex-col items-center justify-center text-center px-4">
+                    <!-- Question text and images will go here -->
+                </div>
+
+                <div id="options-grid" class="grid grid-cols-2 gap-4 mt-8 pb-4">
+                    <!-- Options buttons will go here -->
+                </div>
+            </div>
+
+            <!-- Result View (Hidden initially) -->
+            <div id="result-view" class="hidden h-full flex flex-col items-center justify-center text-center space-y-6">
+                <div id="result-emoji" class="text-8xl">🎉</div>
+                <h2 id="result-title" class="text-4xl font-['Fredoka_One'] text-[#8B5E3C]">Amazing Job!</h2>
+                <div class="text-2xl text-[#4FB0AC] font-bold">Score: <span id="final-score">0/0</span></div>
+                <div id="result-analysis" class="bg-blue-50 p-4 rounded-xl text-[#8B5E3C] max-w-sm">
+                    <!-- Analysis text -->
+                </div>
+                <button onclick="goHome()" class="px-12 py-4 bg-[#F8C8DC] text-white font-['Fredoka_One'] text-2xl rounded-full shadow-lg border-b-4 border-[#e0a8bc] hover:brightness-105 active:border-b-0 active:translate-y-1">
+                    Continue Adventure
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Stats Modal -->
+    <div id="stats-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-3xl w-full max-w-lg p-8 relative">
+            <button onclick="toggleStats()" class="absolute top-4 right-4 text-3xl">✕</button>
+            <h2 class="text-3xl font-['Fredoka_One'] text-[#8B5E3C] mb-6">Your Performance</h2>
+            <div class="space-y-6">
+                <div>
+                    <h3 class="font-bold text-gray-500 mb-2">Total Questions Solved</h3>
+                    <div class="text-4xl font-bold text-[#4FB0AC]" id="total-solved">0</div>
+                </div>
+                <div>
+                    <h3 class="font-bold text-gray-500 mb-2">Accuracy</h3>
+                    <div class="w-full bg-gray-100 h-6 rounded-full overflow-hidden">
+                        <div id="accuracy-bar" class="bg-[#4FB0AC] h-full" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-pink-50 p-4 rounded-xl">
+                        <div class="text-xs text-pink-400 font-bold">STREAK</div>
+                        <div class="text-2xl font-bold text-[#8B5E3C]" id="day-streak">0 Days</div>
+                    </div>
+                    <div class="bg-teal-50 p-4 rounded-xl">
+                        <div class="text-xs text-teal-400 font-bold">BEST SCORE</div>
+                        <div class="text-2xl font-bold text-[#8B5E3C]" id="best-score">0</div>
+                    </div>
+                </div>
+                <button onclick="resetStats()" class="w-full py-2 text-sm text-gray-400 hover:text-red-400 transition-colors mt-4">Reset Progress</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="questions.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
