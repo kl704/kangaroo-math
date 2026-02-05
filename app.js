@@ -1,3 +1,8 @@
+const STORAGE_STATS_KEY = 'labubu_math_stats';
+const STORAGE_QSTATS_KEY = 'labubu_math_qstats_v1';
+
+let questionStats = {};
+
 // State Management
 let currentState = {
     view: 'home',
@@ -6,21 +11,29 @@ let currentState = {
     currentIndex: 0,
     score: 0,
     startTime: null,
+    questionStartAt: null,
     timerInterval: null,
     dailySetsCompleted: 0,
     totalSolved: 0,
     correctAnswers: 0,
-    history: []
+    history: [],
+    usedQuestionIds: [],
+    sessionCounter: 0
 };
 
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     loadStats();
+    loadQuestionStats();
     updateHomeUI();
+
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+    }
 });
 
 function loadStats() {
-    const saved = localStorage.getItem('labubu_math_stats');
+    const saved = localStorage.getItem(STORAGE_STATS_KEY);
     if (saved) {
         const stats = JSON.parse(saved);
         // Reset daily sets if it's a new day
@@ -33,17 +46,36 @@ function loadStats() {
     }
 }
 
+function loadQuestionStats() {
+    const saved = localStorage.getItem(STORAGE_QSTATS_KEY);
+    if (!saved) {
+        questionStats = {};
+        return;
+    }
+    try {
+        questionStats = JSON.parse(saved) || {};
+    } catch {
+        questionStats = {};
+    }
+}
+
+function saveQuestionStats() {
+    localStorage.setItem(STORAGE_QSTATS_KEY, JSON.stringify(questionStats));
+}
+
 function saveStats() {
     const dataToSave = {
         dailySetsCompleted: currentState.dailySetsCompleted,
         totalSolved: currentState.totalSolved,
         correctAnswers: currentState.correctAnswers,
         history: currentState.history,
+        usedQuestionIds: currentState.usedQuestionIds,
+        sessionCounter: currentState.sessionCounter,
         lastDate: new Date().toDateString(),
         bestScore: currentState.bestScore || 0,
         streak: currentState.streak || 0
     };
-    localStorage.setItem('labubu_math_stats', JSON.stringify(dataToSave));
+    localStorage.setItem(STORAGE_STATS_KEY, JSON.stringify(dataToSave));
 }
 
 function updateHomeUI() {
@@ -69,13 +101,23 @@ function goHome() {
 // Quiz Logic
 function startTraining() {
     currentState.mode = 'training';
-    currentState.currentQuestions = getQuestionSet(24);
+    currentState.sessionCounter = (currentState.sessionCounter || 0) + 1;
+    currentState.currentQuestions = getQuestionSet(24, {
+        seenIds: currentState.usedQuestionIds,
+        stats: questionStats,
+        seed: (Date.now() ^ (currentState.sessionCounter * 2654435761)) >>> 0
+    });
     startQuiz();
 }
 
 function startMockTest() {
     currentState.mode = 'test';
-    currentState.currentQuestions = getQuestionSet(24);
+    currentState.sessionCounter = (currentState.sessionCounter || 0) + 1;
+    currentState.currentQuestions = getQuestionSet(24, {
+        seenIds: currentState.usedQuestionIds,
+        stats: questionStats,
+        seed: (Date.now() ^ (currentState.sessionCounter * 2654435761)) >>> 0
+    });
     startQuiz();
 }
 
@@ -103,22 +145,36 @@ function updateQuestion() {
     const q = currentState.currentQuestions[currentState.currentIndex];
     document.getElementById('current-q').textContent = currentState.currentIndex + 1;
     document.getElementById('total-q').textContent = currentState.currentQuestions.length;
+
+    currentState.questionStartAt = Date.now();
     
     const content = document.getElementById('question-content');
-    content.innerHTML = `
-        <div class="bg-pink-50 p-4 rounded-xl mb-4 text-[#4FB0AC] font-bold text-sm uppercase tracking-widest">
-            ${q.category} • ${q.points} Points
-        </div>
-        <h3 class="text-3xl font-bold text-[#8B5E3C] leading-snug">${q.question}</h3>
-    `;
+    content.innerHTML = '';
+
+    const meta = document.createElement('div');
+    meta.className = 'bg-pink-50 p-4 rounded-xl mb-4 text-[#4FB0AC] font-bold text-sm uppercase tracking-widest';
+    meta.textContent = `${q.category} • ${q.points} Points`;
+    content.appendChild(meta);
+
+    const h = document.createElement('h3');
+    h.className = 'text-3xl font-bold text-[#8B5E3C] leading-snug';
+    h.textContent = q.prompt;
+    content.appendChild(h);
+
+    if (q.diagramSvg) {
+        const d = document.createElement('div');
+        d.className = 'diagram';
+        d.innerHTML = q.diagramSvg;
+        content.appendChild(d);
+    }
 
     const optionsGrid = document.getElementById('options-grid');
     optionsGrid.innerHTML = '';
-    q.options.forEach((opt, idx) => {
+    q.choices.forEach((opt, idx) => {
         const btn = document.createElement('button');
         btn.className = 'option-btn';
         btn.textContent = opt;
-        btn.onclick = () => handleAnswer(idx);
+        btn.addEventListener('click', () => handleAnswer(idx), { passive: true });
         optionsGrid.appendChild(btn);
     });
 }
@@ -130,17 +186,31 @@ function handleAnswer(selectedIndex) {
     // Disable all buttons
     btns.forEach(btn => btn.disabled = true);
 
-    if (selectedIndex === q.answer) {
+    const timeSec = currentState.questionStartAt ? Math.max(0, (Date.now() - currentState.questionStartAt) / 1000) : 0;
+    const isCorrect = selectedIndex === q.answerIndex;
+
+    if (isCorrect) {
         btns[selectedIndex].classList.add('correct');
         currentState.score++;
         currentState.correctAnswers++;
         playSuccessEffect();
     } else {
         btns[selectedIndex].classList.add('wrong');
-        btns[q.answer].classList.add('correct');
+        btns[q.answerIndex].classList.add('correct');
     }
 
     currentState.totalSolved++;
+
+    recordQuestionResult(q.id, q.category, isCorrect, timeSec);
+
+    // Track question usage to reduce repeats across sessions.
+    if (q.id && !currentState.usedQuestionIds.includes(q.id)) {
+        currentState.usedQuestionIds.push(q.id);
+        // Prevent unbounded growth.
+        if (currentState.usedQuestionIds.length > 3000) {
+            currentState.usedQuestionIds = currentState.usedQuestionIds.slice(-1500);
+        }
+    }
 
     setTimeout(() => {
         currentState.currentIndex++;
@@ -150,6 +220,36 @@ function handleAnswer(selectedIndex) {
             finishQuiz();
         }
     }, 1500);
+}
+
+function recordQuestionResult(id, category, isCorrect, timeSec) {
+    if (!id) return;
+    const now = Date.now();
+    const prev = questionStats[id] || {
+        seen: 0,
+        correct: 0,
+        wrong: 0,
+        avgTimeSec: 0,
+        lastSeen: 0,
+        category: category || 'Other'
+    };
+
+    const seen = (prev.seen || 0) + 1;
+    const correct = (prev.correct || 0) + (isCorrect ? 1 : 0);
+    const wrong = (prev.wrong || 0) + (isCorrect ? 0 : 1);
+    const avgTimeSec = prev.avgTimeSec ? (prev.avgTimeSec * 0.75 + timeSec * 0.25) : timeSec;
+
+    questionStats[id] = {
+        seen,
+        correct,
+        wrong,
+        avgTimeSec,
+        lastSeen: now,
+        category: prev.category || category || 'Other'
+    };
+
+    // Save frequently so iPad doesn't lose progress.
+    saveQuestionStats();
 }
 
 function finishQuiz() {
@@ -214,7 +314,8 @@ function toggleStats() {
 
 function resetStats() {
     if (confirm("Do you want to clear all your progress?")) {
-        localStorage.removeItem('labubu_math_stats');
+        localStorage.removeItem(STORAGE_STATS_KEY);
+        localStorage.removeItem(STORAGE_QSTATS_KEY);
         location.reload();
     }
 }
