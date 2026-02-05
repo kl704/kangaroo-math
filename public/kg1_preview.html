@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>KG1 Preview</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    .q { margin: 1em 0; }
+    .choices { list-style: none; padding: 0; }
+    .choices li { margin: 6px 0; }
+    .card { border: 1px solid #ddd; padding: 12px; border-radius: 8px; }
+    h2 { margin: 0 0 6px 0; font-size: 1.1em; }
+  </style>
+  <script>
+    async function loadQuestions(limit=10) {
+      let questions = [];
+      try {
+        // Try to load from the same publish folder for Chrome preview
+        const res = await fetch('./kg1_questions.json');
+        if (res.ok) {
+          const payload = await res.json();
+          questions = payload.questions || [];
+        }
+      } catch (e) {
+        // fall back to embedded sample
+        questions = [
+          { id: 'G1Q0000', text: 'What is 1 + 1?', choices: ['2','3','1','0'], answer: 0 },
+          { id: 'G1Q0001', text: 'What is 2 - 1?', choices: ['1','2','3','0'], answer: 0 }
+        ];
+      }
+      return questions.slice(0, limit);
+    }
+
+    function renderQuestions(qs) {
+      const container = document.getElementById('content');
+      container.innerHTML = '';
+      qs.forEach((q, idx) => {
+        const card = document.createElement('div');
+        card.className = 'card q';
+        const title = document.createElement('h2');
+        title.textContent = (idx+1) + '. ' + q.text;
+        const list = document.createElement('ul');
+        list.className = 'choices';
+        q.choices.forEach((c, i) => {
+          const li = document.createElement('li');
+          li.textContent = String.fromCharCode(65+i) + ') ' + c;
+          list.appendChild(li);
+        });
+        card.appendChild(title);
+        card.appendChild(list);
+        container.appendChild(card);
+      });
+    }
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      const qs = await loadQuestions();
+      renderQuestions(qs);
+    });
+  </script>
+</head>
+<body>
+  <h1>KG1 Question Preview</h1>
+  <p>This is a lightweight, local preview of the KG1 question set. For complete validation, run the verify script.
+  </p>
+  <div id="content"></div>
+</body>
+</html>
