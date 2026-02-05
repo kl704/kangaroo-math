@@ -53,11 +53,14 @@ body {
     align-items: center;
     justify-content: center;
     margin-top: 14px;
+    padding: 6px 0 2px;
 }
 
 .diagram svg {
     width: min(520px, 100%);
     height: auto;
+    display: block;
+    margin: 0 auto;
 }
 
 /* Custom scrollbar for stats */

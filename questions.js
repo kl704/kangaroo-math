@@ -189,7 +189,7 @@ function gridMoveQuestion(rnd, id) {
     category: "Logic",
     points: 4,
     prompt: "Where do you end up?",
-    diagramSvg: svgWrap(inner, 520, 260),
+    diagramSvg: svgWrap(inner, 520, 320),
     choices: ch.choices,
     answerIndex: ch.answerIndex
   };
@@ -272,7 +272,7 @@ function mirrorMatchQuestion(rnd, id) {
     category: "Geometry",
     points: 5,
     prompt: "Which option is the mirror image?",
-    diagramSvg: svgWrap(inner, 520, 260),
+    diagramSvg: svgWrap(inner, 520, 320),
     choices: ["A", "B", "C", "D"],
     answerIndex: ["A", "B", "C", "D"].indexOf(correct)
   };
